@@ -1,19 +1,29 @@
-import { serve } from "https://deno.land/std@v0.50.0/http/server.ts";
-import * as flags from "https://deno.land/std@v0.50.0/flags/mod.ts";
+import { Application, Router } from "https://deno.land/x/oak/mod.ts";
 
-const DEFAULT_PORT = 8080;
-const argPort = flags.parse(Deno.args).port;
-const port = argPort ? Number(argPort) : DEFAULT_PORT;
+const env = Deno.env.toObject();
 
-if (isNaN(port)) {
-  console.error("Port is not a number.");
-  Deno.exit(1);
-}
+const APP_HOST = env.APP_HOST || "127.0.0.1";
+const APP_PORT = env.APP_PORT || 4000;
 
-const body = new TextEncoder().encode("Hello World\n");
-const s = serve({ port: port, hostname: '0.0.0.0'});
-console.log("http://localhost:" + port);
 
-for await (const req of s) {
-  req.respond({ body });
-}
+const products = [
+  {
+      id: "1",
+      title: "abc",
+      price: 2000,
+  }
+]
+
+const router = new Router();
+
+router.get("/api/v1/products", ({ response }) => {
+    response.body = products;
+})
+
+const app = new Application();
+app.use(router.routes());
+app.use(router.allowedMethods());
+
+console.log(`Listening on ${APP_PORT}...`);
+
+await app.listen(`${APP_HOST}:${APP_PORT}`)
